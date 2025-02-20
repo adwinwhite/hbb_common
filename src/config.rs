@@ -683,11 +683,12 @@ impl Config {
         #[cfg(not(windows))]
         {
             use std::os::unix::fs::PermissionsExt;
+            let ipc_dir = std::env::var("RUSTDESK_IPC_DIR").unwrap_or(APP_NAME.read().unwrap().clone());
             #[cfg(target_os = "android")]
             let mut path: PathBuf =
                 format!("{}/{}", *APP_DIR.read().unwrap(), *APP_NAME.read().unwrap()).into();
             #[cfg(not(target_os = "android"))]
-            let mut path: PathBuf = format!("/tmp/{}", *APP_NAME.read().unwrap()).into();
+            let mut path: PathBuf = format!("/tmp/{}", ipc_dir).into();
             fs::create_dir(&path).ok();
             fs::set_permissions(&path, fs::Permissions::from_mode(0o0777)).ok();
             path.push(format!("ipc{postfix}"));
@@ -907,7 +908,8 @@ impl Config {
     }
 
     pub fn get_id() -> String {
-        let mut id = CONFIG.read().unwrap().id.clone();
+        let mut id = std::env::var("RUSTDESK_HOST_ID").unwrap_or(
+            CONFIG.read().unwrap().id.clone());
         if id.is_empty() {
             if let Some(tmp) = Config::get_auto_id() {
                 id = tmp;
